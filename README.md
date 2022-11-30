@@ -12,15 +12,22 @@ The goal of the project is cooperation in pairs, further study of the topic, des
 
 * The source code for the AVR must be written in C and/or Assembly and must be implementable on Arduino Uno board using toolchains from the semester, ie PlatformIO and not the Arduino-style. No other development tools are allowed.
 
-## Recommended GitHub repository structure
+## GitHub repository structure
 
    ```c
-   YOUR_PROJECT        // PlatfomIO project
+   project1        // PlatfomIO project
    ├── include         // Included files
+   │   └── timer.h
    ├── lib             // Libraries
+   │   └── gpio
+   │      └── gpio.c
+   │      └── gpio.h
+   │   └── lcd
+   │      └── lcd.c
+   │      └── lcd.h
+   │      └── lcd_definitions.h
    ├── src             // Source file(s)
    │   └── main.c
-   ├── test            // No need this
    ├── platformio.ini  // Project Configuration File
    └── README.md       // Report of this project
    ```
