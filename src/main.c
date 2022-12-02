@@ -28,7 +28,7 @@ void lcd_put_time(uint8_t row, uint8_t old[8]);
 void array_cpy(uint8_t dest[8], uint8_t src[8]);
 void array_sub();
 
-//definition of encoder button pin
+//definition input/output pins
 #define ENCODER_BTN PD2
 #define ENCODER_PIN1 PB4
 #define ENCODER_PIN2 PD3
@@ -68,17 +68,16 @@ int main(void){
     data.semaphore=0;
     data.change=0;
     
+    uint8_t clear_seq[8]={0,0,0,0,0,0,0,0};         //varibale used for delete data saved in structure  
 
-    uint8_t clear_seq[8]={0,0,0,0,0,0,0,0};        //varibale used for delete data saved in structure  
-
-    array_cpy(data.time_a,clear_seq);
+    array_cpy(data.time_a,clear_seq);               //initialize all timers to zero
     array_cpy(data.time_min,clear_seq);
     array_cpy(data.time_stop,clear_seq);
     
     //setup input/output pins
-    GPIO_mode_input_nopull(&ENCODER_PIN1P,ENCODER_PIN1);      //CLK from rotary encoder
-    GPIO_mode_input_nopull(&ENCODER_PIN2P,ENCODER_PIN2);      //data from rotary encoder
-    GPIO_mode_input_nopull(&ENCODER_BTNP,ENCODER_BTN);      //switch from joystick
+    GPIO_mode_input_nopull(&ENCODER_PIN1P,ENCODER_PIN1);        //CLK from rotary encoder
+    GPIO_mode_input_nopull(&ENCODER_PIN2P,ENCODER_PIN2);        //data from rotary encoder
+    GPIO_mode_input_nopull(&ENCODER_BTNP,ENCODER_BTN);          //switch from joystick
 
     uart_init(UART_BAUD_SELECT(9600,F_CPU));
 
@@ -114,10 +113,10 @@ int main(void){
     // Set clock prescaler to 128
     ADCSRA |= (1UL<<0)|(1UL<<1)|(1UL<<2);
 
-    //falling edge interrupt
+    //set falling edge interrupt
     EICRA |= (1UL<<3);
 
-    // Configure timers
+    // Configure timers and enable timer for reading data from joystick
     TIM0_overflow_16ms();
     TIM0_overflow_interrupt_enable();
     TIM1_overflow_1s();
@@ -142,6 +141,7 @@ int main(void){
             lcd_gotoxy(data.col, data.row); 
         }
         
+        //if stopwatch are stopped disable interrupt routine for button and print data to LCD
         if(data.semaphore==0&&data.change==1){
             EIMSK &= ~(1UL<<0);
             lcd_gotoxy(data.col, data.row);
@@ -250,11 +250,14 @@ ISR(TIMER0_OVF_vect){
         //change pin to read
         ADMUX |= (1UL<<0);
         
+        //wait one conversion
         do{
             ;
         }while((ADCSRA&16)==0);
-
+        
+        //start conversion
         ADCSRA |= (1UL<<6);
+
         //read value from ADC and decision
         val2 = ADC;
 
@@ -307,8 +310,8 @@ ISR(TIMER1_OVF_vect){
 }
 
 /**********************************************************************
- * Function: Timer/Counter0 overflow interrupt
- * Purpose:  Counter for timers, overflows every 1s (used prescaler in overflow routine)
+ * Function: INT0 interrupt routine
+ * Purpose:  if button is pressed set semafore to zero and switch timers
  **********************************************************************/
 ISR(PCINT0_vect){
     TIM1_overflow_interrupt_disable();
@@ -326,6 +329,7 @@ void rot_encoder(){
 
     cnt=data.time_min[data.col-6];
 
+    //wait till the button is pressed
     wait_btn();
 
     last=GPIO_read(&ENCODER_PIN1RP,ENCODER_PIN1);
@@ -345,6 +349,7 @@ void rot_encoder(){
             }
         }
         last=act;
+        //if counter value was changed print it to LCD
         if(cnt!=cnt_o){
             lcd_gotoxy(data.col, data.row);
             itoa(cnt,str,10);
@@ -354,14 +359,9 @@ void rot_encoder(){
         }
     }while(GPIO_read(&ENCODER_BTNRP,ENCODER_BTN));
     data.time_min[data.col-6]=cnt;
-    itoa(cnt,str,10);
-    uart_puts(str);
-    uart_puts("\t");
-    itoa(data.time_min[data.col-6],str,10);
-    uart_puts(str);
-    uart_puts("\n\r");
     lcd_gotoxy(data.col, data.row);
 
+    //wait till button is pressed
     wait_btn();
 }
 
@@ -424,16 +424,20 @@ void array_sub(){
 }
 
 /**********************************************************************
- * Function: ADC complete interrupt
- * Purpose:  Display converted value on LCD screen.
+ * Function: Active waitig for button relase 
+ * Purpose:  Prevents repeating of the same routine without purpose
  **********************************************************************/
-ISR(ADC_vect){
-    ;
-}
-
 void wait_btn(){
     //wait till the button is pressed
     do{
         ;
     }while(GPIO_read(&ENCODER_BTNRP,ENCODER_BTN)==0);
+}
+
+/**********************************************************************
+ * Function: ADC complete interrupt
+ * Purpose:  Display converted value on LCD screen.
+ **********************************************************************/
+ISR(ADC_vect){
+    ;
 }
