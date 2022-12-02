@@ -131,7 +131,7 @@ První části je inicializace mikroprocesoru a periferií (ADC, řízení přer
 
 vektory přerušení jsou všechny definovány v [main.c](/src/main.c).
 
-![flowchart interrupt vectors](/images/main.png)
+![flowchart interrupt vectors](/images/vectors.png)
 
 ## Video
 
