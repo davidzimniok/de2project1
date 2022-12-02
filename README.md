@@ -133,6 +133,22 @@ vektory přerušení jsou všechny definovány v [main.c](/src/main.c).
 
 ![flowchart interrupt vectors](/images/vectors.png)
 
+#### Vývojový diagram pro funkci lcd_put_time(uint8_t row, uint8_t old[8])
+
+![flowchart put_time function](/images/put_time.png)
+
+#### Vývojový diagram pro funkci rot_encoder()
+
+![flowchart rot_encoder function](/images/rot_encoder.png)
+
+#### Vývojový diagram pro funkci void array_cpy(uint8_t dest[8], uint8_t src[8]) and wait_btn()
+
+![flowchart wait_btn function](/images/wait_btn.png)
+
+#### Vývojový diagram pro funkci array_sub()
+
+![flowchart array_sub function](/images/array_sub.png)
+
 ## Video
 
 Insert a link to a short video with your practical implementation example (1-3 minutes, e.g. on YouTube).

@@ -406,6 +406,12 @@ void array_cpy(uint8_t dest[8], uint8_t src[8]){
 void array_sub(){
     int temp1=1,temp2=0;
     uint8_t i,state=0;
+    temp1+=data.time_min[0]*36000;
+    temp1+=data.time_min[1]*3600;
+    temp1+=data.time_min[3]*600;
+    temp1+=data.time_min[4]*60;
+    temp1+=data.time_min[6]*10;
+    temp1+=data.time_min[7];
     temp1=temp2-temp1;
     data.time_min[0]=(temp1-temp1%36000)/36000;
     temp1-=(temp1-temp1%36000)/36000;
@@ -413,7 +419,7 @@ void array_sub(){
     temp1-=(temp1-temp1%3600)/3600;
     data.time_min[3]=(temp1-temp1%600)/600;
     temp1-=(temp1-temp1%600)/600;
-    data.time_min[4]=(temp1-temp1%3600)/3600;
+    data.time_min[4]=(temp1-temp1%3600)/60;
     temp1-=(temp1-temp1%60)/60;
     data.time_min[6]=(temp1-temp1%10)/10;
     temp1-=(temp1-temp1%10)/10;
