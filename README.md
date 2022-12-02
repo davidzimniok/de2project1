@@ -122,10 +122,16 @@ struct dataframe{
 } data;
 ```
 
-### Funkce main()
+#### Funkce main()
 První části je inicializace mikroprocesoru a periferií (ADC, řízení přerušení) včetně nastavení globálních poměnných. Funkce while aktivně čeká na preempci časovači. Funkce while odpovídá za časově náročné operace (posuny v osách, výpisy na LCD) a ulehčuje tak vektorům přerušení. Celá funcke main je detilně popsána v následujícícm vývojovém diagramu. 
 
 ![flowchart of main function](/images/main.png)
+
+#### Vývojové diagramy pro vektory přerušení
+
+vektory přerušení jsou všechny definovány v [main.c](/src/main.c).
+
+![flowchart interrupt vectors](/images/main.png)
 
 ## Video
 
