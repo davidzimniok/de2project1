@@ -12,7 +12,7 @@ The goal of the project is cooperation in pairs, further study of the topic, des
 
 * The source code for the AVR must be written in C and/or Assembly and must be implementable on Arduino Uno board using toolchains from the semester, ie PlatformIO and not the Arduino-style. No other development tools are allowed.
 
-## GitHub repository structure
+## Struktura GitHub repozitáře
 
    ```c
    project1        // PlatfomIO project
@@ -32,9 +32,7 @@ The goal of the project is cooperation in pairs, further study of the topic, des
    └── README.md       // Report of this project
    ```
 
-## Recommended README.md file structure
-
-### Team members
+### Členové týmu
 
 * Vojtěch Vídeňský (responsible for xxx)
 * David Zimniok (responsible for xxx)
@@ -43,15 +41,99 @@ The goal of the project is cooperation in pairs, further study of the topic, des
 
 Insert descriptive text and schematic(s) of your implementation.
 
-## Software description
+## Popis software-u
 
-Put flowchats of your algorithm(s). Write descriptive text of your libraries and source files. Put direct links to these files in `src` or `lib` folders.
+### Knihovna timer.h
+Z této knihovny byly využity pouze makra pro nastavení předděliček hodinového signálu pro časovače a také makra pro povolení nebo zakázání přerušení způsobeného přetečením čítače. V kódu níže jsou z knihovny použitá makra vytažené. 
+
+Knihovna timer.h je dostupná [zde](/include/timer.h). Popis registrů je dostupný v oficiálním manuálu na [zde](https://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-7810-Automotive-Microcontrollers-ATmega328P_Datasheet.pdf) na straně 84-88 pro timer 0, a na straně 108-113 pro timer 1.
+
+```c
+/** @brief Set overflow 16ms, prescaler // 101 --> 1024 */
+#define TIM0_overflow_16ms()    TCCR0B &= ~(1<<CS01); TCCR0B |= (1<<CS02) | (1<<CS00);
+
+/** @brief Enable overflow interrupt, 1 --> enable */
+#define TIM0_overflow_interrupt_enable()  TIMSK0 |= (1<<TOIE0);
+/** @brief Disable overflow interrupt, 0 --> disable */
+#define TIM0_overflow_interrupt_disable() TIMSK0 &= ~(1<<TOIE0);
+
+
+/** @brief Set overflow 1s, prescaler 100 --> 256 */
+#define TIM1_overflow_1s()    TCCR1B &= ~((1<<CS11) | (1<<CS10)); TCCR1B |= (1<<CS12);
+
+/** @brief Enable overflow interrupt, 1 --> enable */
+#define TIM1_overflow_interrupt_enable()  TIMSK1 |= (1<<TOIE1);
+/** @brief Disable overflow interrupt, 0 --> disable */
+#define TIM1_overflow_interrupt_disable() TIMSK1 &= ~(1<<TOIE1);
+```
+
+### Knihovna gpio.h
+Knihovna gpio.h obsahuje pouze deklarace funkcí, které jsou rozepsané v souboru [gpio.c](/lib/gpio/gpio.c). Z této knihovny jsou využity funkce pro nastavení vstupních pinů a pro digitální čtení stavu pinu (1/0). V obou funkcích vstupní proměnná reg, respektive ukazatel na ní nám definuje na jakém portu je připojen pin a proměnná pin definuje přesnou pozici v registru ze které se data čtou. 
+
+```c
+void GPIO_mode_input_nopull(volatile uint8_t *reg, uint8_t pin)
+
+uint8_t GPIO_read(volatile uint8_t *reg, uint8_t pin);
+```
+
+### Library lcd.h
+Knihovna použita od autora Peter Fleury. Stránky projektu jsou dostupné [zde](http://www.peterfleury.epizy.com/avr-lcd44780.html). Ke knihovně je přidán soubor [lcd_definitions.h](/lib/lcd/lcd_definitions.h), který pouze definuje podobným způsobem jako pro GPIO porty, na kterých pinech jsou zapojené datové a řídící signály pro LCD display.
+
+### Zdrojový kód main.c
+Tento soubor je rozdělen do několika částí. Nejdříve jsou definovány prototypy všech funkcí vyjma vektorů přerušení.
+
+#### Prototypy funkcí
+```c
+// čtení dat z rotačního enkóderu (využívá aktivního čekání)
+void rot_encoder();
+// tisk časů uložených v paměti na LCD, row určuje řádek a proměnnou old se zasílá poslední vytištěná hodnota, co předchází bilání displeje
+void lcd_put_time(uint8_t row, uint8_t old[8]);
+// funkce pro kopírování dat z pole src do pole dest
+void array_cpy(uint8_t dest[8], uint8_t src[8]);
+// aktivní čekání na puštění tlačítka (zabraňuje spouštění nevyžádaných částí kódu)
+void wait_btn();
+// od pole dat pro minutku odečte 1 (spouštěno po každé změně - nastavení časovače na 1s)
+void array_sub();
+```
+#### Vektory přerušení
+```c
+// vektor přerušení pro čtení dat z enkóderu
+ISR(TIMER0_OVF_vect)
+// vektor přerušení pro funkce počítání času (inkrementace vnitřního času)
+ISR(TIMER1_OVF_vect)
+// vektor přerušení pro vypnutí čítání - vypnutí timeru 1
+ISR(PCINT0_vect)
+```
+
+#### Globální proměnné
+Pro přenos dat mezi jednotlivými funkcemi a pro usnadnění celého výpočtu je vytvořená globální struktura, která nese informace o aktuálním čase (time_a), time_stop je čas na stopkách vypisovaný na LCD, time_min je uživatelem nastavená hodnota časovače na LCD, col určuje aktuální pozici na displeji v ose x, row určuje aktuální pozici na LCD v pozici y, jmovex indikuje posun v ose x (přenos stavu z přerušení do nekonečné smyčky ve funkci main), jmovey viz. jmovex pouze pro osu y, semaphore určuje v jakém stavu se aktálně nachází mikroprocesor (0 čeká na spuštění časovače, 1 funkce minutky, 2 funkce stopek) na základě těchto stavů dochází k větvení programů, change určuje průchod prvním přerušením časovače po spuštění stopek/minutek (ochrana proti nechtěnému okamžitému vypnutí časovače).
+
+```c
+struct dataframe{
+    uint8_t time_stop[8];
+    uint8_t time_min[8];
+    uint8_t time_a[8];
+    uint8_t col;
+    uint8_t row;
+    uint8_t jmovex;         //0 stay at place, 1 move to left, 2 move to right
+    uint8_t jmovey;         //0 stay at place, 1 move up, 2 move down
+    uint8_t semaphore;      //0 waiting for time set, 1 timer , 2 stopwatch
+    uint8_t change;
+} data;
+```
+
+### Funkce main()
+První části je inicializace mikroprocesoru a periferií (ADC, řízení přerušení) včetně nastavení globálních poměnných. Funkce while aktivně čeká na preempci časovači. Funkce while odpovídá za časově náročné operace (posuny v osách, výpisy na LCD) a ulehčuje tak vektorům přerušení. Celá funcke main je detilně popsána v následujícícm vývojovém diagramu. 
+
+![flowchart of main function](/images/main.png)
 
 ## Video
 
 Insert a link to a short video with your practical implementation example (1-3 minutes, e.g. on YouTube).
 
-## References
+## Zdroje
 
-1. Write your text here.
-2. ...
+1. Datasheet ATmega328p: [https://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-7810-Automotive-Microcontrollers-ATmega328P_Datasheet.pdf](https://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-7810-Automotive-Microcontrollers-ATmega328P_Datasheet.pdf)
+2. Peter Fleury LCD library: [http://www.peterfleury.epizy.com/avr-lcd44780.html](http://www.peterfleury.epizy.com/avr-lcd44780.html)
+3. Rotary encoder reading with Arduino: [https://howtomechatronics.com/tutorials/arduino/rotary-encoder-works-use-arduino/](https://howtomechatronics.com/tutorials/arduino/rotary-encoder-works-use-arduino/)
+4. Funkce v knihovně GPIO read: [https://github.com/tomas-fryza/digital-electronics-2](https://github.com/tomas-fryza/digital-electronics-2)

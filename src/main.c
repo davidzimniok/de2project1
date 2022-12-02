@@ -26,6 +26,7 @@
 void rot_encoder();
 void lcd_put_time(uint8_t row, uint8_t old[8]);
 void array_cpy(uint8_t dest[8], uint8_t src[8]);
+void wait_btn();
 void array_sub();
 
 //definition input/output pins
@@ -126,21 +127,6 @@ int main(void){
 
     // Infinite loop
     while (1){
-        //print counter value direct to LCD when stopwatch or timer is on
-        if(data.semaphore==2){
-            array_cpy(old,data.time_stop);
-            array_cpy(data.time_stop,data.time_a);
-            lcd_put_time(0,old);
-            lcd_gotoxy(data.col, data.row); 
-        }
-        //substract one from value setted by user and print it
-        else if(data.semaphore==1){
-            array_cpy(old,data.time_min);
-            array_sub();
-            lcd_put_time(1,old);
-            lcd_gotoxy(data.col, data.row); 
-        }
-        
         //if stopwatch are stopped disable interrupt routine for button and print data to LCD
         if(data.semaphore==0&&data.change==1){
             EIMSK &= ~(1UL<<0);
@@ -278,6 +264,7 @@ ISR(TIMER0_OVF_vect){
  **********************************************************************/
 ISR(TIMER1_OVF_vect){
     uint8_t clear_seq[8]={0,0,0,0,0,0,0,0};
+    uint8_t old[8];
 
     if(data.change==0) array_cpy(data.time_a,clear_seq);
 
@@ -305,6 +292,20 @@ ISR(TIMER1_OVF_vect){
     if(data.time_a[0]==10){
         array_cpy(data.time_a,clear_seq);
     } 
+    //print counter value direct to LCD when stopwatch or timer is on
+    if(data.semaphore==2){
+        array_cpy(old,data.time_stop);
+        array_cpy(data.time_stop,data.time_a);
+        lcd_put_time(0,old);
+        lcd_gotoxy(data.col, data.row); 
+    }
+    //substract one from value setted by user and print it
+    else if(data.semaphore==1){
+        array_cpy(old,data.time_min);
+        array_sub();
+        lcd_put_time(1,old);
+        lcd_gotoxy(data.col, data.row); 
+    }
     //flag (value was changed)
     data.change=1;
 }
