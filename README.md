@@ -38,8 +38,23 @@ The goal of the project is cooperation in pairs, further study of the topic, des
 * David Zimniok (responsible for xxx)
 
 ## Hardware description
+V projektu je použit mikrokontrolér Arduino Uno založený, který je založen na AVR čipu ATMEGA328P. Jako vnější periferie jsou použity LCD displey Digilent pro zobrazování informací, rotační enkodér a joystick pro ovládání zařízení.
 
-Insert descriptive text and schematic(s) of your implementation.
+### Schéma zapojení
+![DE2-6](https://user-images.githubusercontent.com/99399676/205460821-f3f78203-8ce1-475d-b6a6-02dcaf3acb2f.jpg)
+
+### Digilent PmodCLP LCD module
+LCD diplej je výstupní zařízení, které umožňuje zobrazení znaků ASCII kódu. Obsahuje 8 pinů pro vstupní data, 4 piny pro nastavování registrů a na piny napájení. Podrobnou dokumentaci k tomuto LCD dipleji naleznete [zde](https://digilent.com/reference/_media/pmod:pmod:pmodCLP_rm.pdf).
+
+### Rotační Enkodér
+Jedná se o typ snímače polohy, který převádí úhlovou polohu (otočení) knoflíku na výstupní signál. Dle signálu výstupního signálu se určuje na kterou stranu se enkodér otáčí.  Výstupem jsou dva obdelníkové signály, první signál je CLK a druhý  DT.  Směr otáčení se určuje vzájemné opoždění nebo předsunutí. Podrboný popis funkčnosti si můžete přečíst [zde](https://lastminuteengineers.com/rotary-encoder-arduino-tutorial/). Obsahuje 5 pinů, dva pro napájení (+5 V, GND), jeden pro tlačítko (SW) a dva pro výstupní obdelníkové signály (CLK, DT).
+
+V našem projektu je rotační enkodér použit k nastavování času na minutce. Stisknutím tlačítka, které rotační enkodér obsahuje, vybíráme pozici a potvrzujeme nastavenou hodnotu. Poslední funkcí je spuštění a zastavení stopek nebo minutky pomocí tlačítka na enkodéru.
+
+### Joystick
+Joystick je dvou osé vstupní zařízení, které nám umožńuje pohyb ve čtyřech směrech. Jeho konstrukce obsahuje dva potenciometry, každý pro jednu osu. Napětí na potenciometru přivádíme na analogový vstup mikrokontroléru a převádíme na digitální hodnotu. Přesný popis funkčnosti naleznete [zde](https://create.arduino.cc/projecthub/MisterBotBreak/how-to-use-a-joystick-with-serial-monitor-1f04f0). Obsahuje 5 pinů. Dva pro napájení (+5 V, GND), jeden pro talčítko (SW) a dva pro analogové hodnoty napětí z potenciometru (VRX, VRY).
+
+Joystick používáme pro pohyb po displeji a výběru pozic kterou chceme nastavovat.
 
 ## Popis software-u
 
