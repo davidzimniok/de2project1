@@ -34,7 +34,7 @@ The goal of the project is cooperation in pairs, further study of the topic, des
 
 ### Členové týmu
 
-* Vojtěch Vídeňský (responsible for xxx)
+* Vojtěch Vídenský (responsible for xxx)
 * David Zimniok (responsible for xxx)
 
 ## Hardware description
