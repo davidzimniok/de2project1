@@ -166,7 +166,7 @@ vektory přerušení jsou všechny definovány v [main.c](/src/main.c).
 
 ## Video
 
-Insert a link to a short video with your practical implementation example (1-3 minutes, e.g. on YouTube).
+[Video na Youtube](https://youtu.be/_CT1GLZWmjs)
 
 ## Zdroje
 
