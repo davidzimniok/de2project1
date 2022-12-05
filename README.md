@@ -34,22 +34,27 @@ The goal of the project is cooperation in pairs, further study of the topic, des
 
 ### Členové týmu
 
-* Vojtěch Vídenský (responsible for xxx)
-* David Zimniok (responsible for xxx)
+* Vojtěch Vídenský (zodopovědný za github repozitář, video, testování aplikace)
+* David Zimniok (zodpovědný za zdrojový kód)
 
 ## Hardware description
-V projektu je použit mikrokontrolér Arduino Uno založený, který je založen na AVR čipu ATMEGA328P. Jako vnější periferie jsou použity LCD displey Digilent pro zobrazování informací, rotační enkodér a joystick pro ovládání zařízení.
+V projektu je použit mikrokontrolér Arduino Uno, který je založen na AVR čipu ATMEGA328P. Jako vnější periferie jsou použity LCD displey Digilent pro zobrazování informací, rotační enkodér a joystick pro ovládání zařízení.
 
 ### Schéma zapojení
 ![DE2-6](https://user-images.githubusercontent.com/99399676/205460821-f3f78203-8ce1-475d-b6a6-02dcaf3acb2f.jpg)
 
 ### Digilent PmodCLP LCD module
-LCD diplej je výstupní zařízení, které umožňuje zobrazení znaků ASCII kódu. Obsahuje 8 pinů pro vstupní data, 4 piny pro nastavování registrů a na piny napájení. Podrobnou dokumentaci k tomuto LCD dipleji naleznete [zde](https://digilent.com/reference/_media/pmod:pmod:pmodCLP_rm.pdf).
+LCD diplej je výstupní zařízení, které umožňuje zobrazení znaků ASCII kódu uložených v interní paměti driveru HD44780, nebo znaků vložených do interní paměti uživatelem (8 pozic pro uživatelské znaky). Obsahuje 8 pinů pro vstupní data, 4 piny pro nastavování registrů a piny napájení. V naší aplikaci se používá pouze 4 datové piny, avšak informace vysílané na LCD jsou pořád 8-mi bitové, pouze vysílané ve 2 fázích. Podrobnou dokumentaci k tomuto LCD dipleji naleznete [zde](https://digilent.com/reference/_media/pmod:pmod:pmodCLP_rm.pdf).
 
 ### Rotační Enkodér
-Jedná se o typ snímače polohy, který převádí úhlovou polohu (otočení) knoflíku na výstupní signál. Dle signálu výstupního signálu se určuje na kterou stranu se enkodér otáčí.  Výstupem jsou dva obdelníkové signály, první signál je CLK a druhý  DT.  Směr otáčení se určuje vzájemné opoždění nebo předsunutí. Podrboný popis funkčnosti si můžete přečíst [zde](https://lastminuteengineers.com/rotary-encoder-arduino-tutorial/). Obsahuje 5 pinů, dva pro napájení (+5 V, GND), jeden pro tlačítko (SW) a dva pro výstupní obdelníkové signály (CLK, DT).
+Jedná se o typ snímače polohy, který převádí úhlovou polohu (otočení) knoflíku na výstupní signál. Dle fázového posunu výstupních signálu vůčí sobě se určuje na kterou stranu se enkodér otáčí.  Výstupem jsou dva obdelníkové signály, první signál je CLK a druhý DT. Funkce je demonstrována na obrázku níže. Podrboný popis funkčnosti si můžete přečíst [zde](https://lastminuteengineers.com/rotary-encoder-arduino-tutorial/). Obsahuje 5 pinů, dva pro napájení (+5 V, GND), jeden pro tlačítko pracující v active-low módu (SW) a dva pro výstupní obdelníkové signály (CLK, DT).
 
 V našem projektu je rotační enkodér použit k nastavování času na minutce. Stisknutím tlačítka, které rotační enkodér obsahuje, vybíráme pozici a potvrzujeme nastavenou hodnotu. Poslední funkcí je spuštění a zastavení stopek nebo minutky pomocí tlačítka na enkodéru.
+
+![rotary-encoder function](https://how2electronics.com/wp-content/uploads/2019/03/how-rotary-encoder-works.png)
+
+Převzato z: 
+[https://how2electronics.com/construction-working-rotary-encoder/](https://how2electronics.com/construction-working-rotary-encoder/)
 
 ### Joystick
 Joystick je dvou osé vstupní zařízení, které nám umožńuje pohyb ve čtyřech směrech. Jeho konstrukce obsahuje dva potenciometry, každý pro jednu osu. Napětí na potenciometru přivádíme na analogový vstup mikrokontroléru a převádíme na digitální hodnotu. Přesný popis funkčnosti naleznete [zde](https://create.arduino.cc/projecthub/MisterBotBreak/how-to-use-a-joystick-with-serial-monitor-1f04f0). Obsahuje 5 pinů. Dva pro napájení (+5 V, GND), jeden pro talčítko (SW) a dva pro analogové hodnoty napětí z potenciometru (VRX, VRY).
@@ -61,7 +66,7 @@ Joystick používáme pro pohyb po displeji a výběru pozic kterou chceme nasta
 ### Knihovna timer.h
 Z této knihovny byly využity pouze makra pro nastavení předděliček hodinového signálu pro časovače a také makra pro povolení nebo zakázání přerušení způsobeného přetečením čítače. V kódu níže jsou z knihovny použitá makra vytažené. 
 
-Knihovna timer.h je dostupná [zde](/include/timer.h). Popis registrů je dostupný v oficiálním manuálu na [zde](https://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-7810-Automotive-Microcontrollers-ATmega328P_Datasheet.pdf) na straně 84-88 pro timer 0, a na straně 108-113 pro timer 1.
+Knihovna timer.h je dostupná [zde](/include/timer.h). Popis registrů je dostupný v oficiálním manuálu [ATmega328P_Datasheet](https://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-7810-Automotive-Microcontrollers-ATmega328P_Datasheet.pdf) na straně 84-88 pro timer 0, a na straně 108-113 pro timer 1.
 
 ```c
 /** @brief Set overflow 16ms, prescaler // 101 --> 1024 */
@@ -92,7 +97,7 @@ uint8_t GPIO_read(volatile uint8_t *reg, uint8_t pin);
 ```
 
 ### Library lcd.h
-Knihovna použita od autora Peter Fleury. Stránky projektu jsou dostupné [zde](http://www.peterfleury.epizy.com/avr-lcd44780.html). Ke knihovně je přidán soubor [lcd_definitions.h](/lib/lcd/lcd_definitions.h), který pouze definuje podobným způsobem jako pro GPIO porty, na kterých pinech jsou zapojené datové a řídící signály pro LCD display.
+Knihovna použita od autora Peter Fleury. Stránky projektu jsou dostupné na: [http://www.peterfleury.epizy.com/avr-lcd44780.html](http://www.peterfleury.epizy.com/avr-lcd44780.html). Ke knihovně je přidán soubor [lcd_definitions.h](/lib/lcd/lcd_definitions.h), který pouze definuje podobným způsobem jako pro GPIO porty, na kterých pinech jsou zapojené datové a řídící signály pro LCD display.
 
 ### Zdrojový kód main.c
 Tento soubor je rozdělen do několika částí. Nejdříve jsou definovány prototypy všech funkcí vyjma vektorů přerušení.
@@ -121,7 +126,7 @@ ISR(PCINT0_vect)
 ```
 
 #### Globální proměnné
-Pro přenos dat mezi jednotlivými funkcemi a pro usnadnění celého výpočtu je vytvořená globální struktura, která nese informace o aktuálním čase (time_a), time_stop je čas na stopkách vypisovaný na LCD, time_min je uživatelem nastavená hodnota časovače na LCD, col určuje aktuální pozici na displeji v ose x, row určuje aktuální pozici na LCD v pozici y, jmovex indikuje posun v ose x (přenos stavu z přerušení do nekonečné smyčky ve funkci main), jmovey viz. jmovex pouze pro osu y, semaphore určuje v jakém stavu se aktálně nachází mikroprocesor (0 čeká na spuštění časovače, 1 funkce minutky, 2 funkce stopek) na základě těchto stavů dochází k větvení programů, change určuje průchod prvním přerušením časovače po spuštění stopek/minutek (ochrana proti nechtěnému okamžitému vypnutí časovače).
+Pro přenos dat mezi jednotlivými funkcemi a pro usnadnění celého výpočtu je vytvořená globální struktura, která nese informace o aktuálním čase (time_a), time_stop je čas na stopkách vypisovaný na LCD, time_min je uživatelem nastavená hodnota časovače na LCD, col určuje aktuální pozici na displeji v ose x, row určuje aktuální pozici na LCD v ose y, jmovex indikuje posun v ose x (přenos stavu z přerušení do nekonečné smyčky ve funkci main), jmovey viz. jmovex pouze pro osu y, semaphore určuje v jakém stavu se aktálně nachází mikroprocesor (0 čeká na spuštění časovače, 1 funkce minutky, 2 funkce stopek) na základě těchto stavů dochází k větvení programů, change určuje průchod prvním přerušením časovače po spuštění stopek/minutek (ochrana proti nechtěnému okamžitému vypnutí časovače).
 
 ```c
 struct dataframe{
@@ -176,3 +181,4 @@ Zmíněné chyby ve videu byly odlazeny v omezeném režimu, není tak vyloučen
 2. Peter Fleury LCD library: [http://www.peterfleury.epizy.com/avr-lcd44780.html](http://www.peterfleury.epizy.com/avr-lcd44780.html)
 3. Rotary encoder reading with Arduino: [https://howtomechatronics.com/tutorials/arduino/rotary-encoder-works-use-arduino/](https://howtomechatronics.com/tutorials/arduino/rotary-encoder-works-use-arduino/)
 4. Funkce v knihovně GPIO read: [https://github.com/tomas-fryza/digital-electronics-2](https://github.com/tomas-fryza/digital-electronics-2)
+5. Rotační enkóder - vysvětlení funkce: [https://how2electronics.com/construction-working-rotary-encoder/]
