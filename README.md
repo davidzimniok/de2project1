@@ -173,7 +173,7 @@ vektory přerušení jsou všechny definovány v [main.c](/src/main.c).
 
 [Video na Youtube](https://youtu.be/_CT1GLZWmjs)
 
-Zmíněné chyby ve videu byly odlazeny v omezeném režimu, není tak vyloučeno omezení plné funkčnosti.
+Zmíněné chyby ve videu byly odstraněné a odladěné v omezeném režimu (bez použití joysticku), není tak vyloučeno omezení plné funkčnosti.
 
 ## Zdroje
 
